@@ -95,6 +95,8 @@ request_many_bulk_multi(_Config) ->
 
 request_timeout(_Config) ->
   Conn = connect(),
+  %% To make redis spin for half a second we apply technique from
+  %% https://medium.com/@stockholmux/simulating-a-slow-command-with-node-redis-and-lua-efadbf913cd9
   {ok, SleepScript} = file:read_file("../../../../test/sleep.lua"),
   {Time, {error, timeout}} = timer:tc(fun() ->
     eredis_sync:request(Conn, [["EVAL", SleepScript, "0", "9999999"]], 100)
