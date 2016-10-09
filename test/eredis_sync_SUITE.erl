@@ -97,6 +97,6 @@ request_timeout(_Config) ->
   Conn = connect(),
   {ok, SleepScript} = file:read_file("../../../../test/sleep.lua"),
   {Time, {error, timeout}} = timer:tc(fun() ->
-    eredis_sync:request(Conn, [["EVAL", SleepScript, "0", "999999"]], 10)
+    eredis_sync:request(Conn, [["EVAL", SleepScript, "0", "9999999"]], 100)
   end),
-  true = (Time < 20000).
+  true = (Time < 200000).

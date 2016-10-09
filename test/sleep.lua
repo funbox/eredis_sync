@@ -1,7 +1,7 @@
 local aTempKey = "a-temp-key"
 local cycles
 redis.call("SET",aTempKey,"1")
-redis.call("PEXPIRE",aTempKey, 100)
+redis.call("PEXPIRE",aTempKey, 500)
 for i = 0, ARGV[1], 1 do
 	local apttl = redis.call("PTTL",aTempKey)
 	cycles = i;
