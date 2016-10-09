@@ -9,7 +9,8 @@
   request_simple_error/1,
   request_many/1,
   request_many_bulk/1,
-  request_many_bulk_multi/1
+  request_many_bulk_multi/1,
+  request_timeout/1
 ]).
 
 all() -> [
@@ -20,7 +21,8 @@ all() -> [
   request_simple_error,
   request_many,
   request_many_bulk,
-  request_many_bulk_multi
+  request_many_bulk_multi,
+  request_timeout
 ].
 
 connect_ok(_Config) ->
@@ -90,3 +92,11 @@ request_many_bulk_multi(_Config) ->
     ["SMEMBERS", "S"],
     ["EXEC"]
   ], 1000).
+
+request_timeout(_Config) ->
+  Conn = connect(),
+  {ok, SleepScript} = file:read_file("../../../../test/sleep.lua"),
+  {Time, {error, timeout}} = timer:tc(fun() ->
+    eredis_sync:request(Conn, [["EVAL", SleepScript, "0", "999999"]], 10)
+  end),
+  true = (Time < 20000).
