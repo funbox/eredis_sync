@@ -89,4 +89,4 @@ request_many_bulk_multi(_Config) ->
     ["SADD", "S", "2"],
     ["SMEMBERS", "S"],
     ["EXEC"]
-  ]).
+  ], 1000).
