@@ -3,12 +3,13 @@
 -export_type([conn/0]).
 
 -define(DEFAULT_TIMEOUT, 5000).
+-define(NL, "\r\n").
 
 -opaque conn() :: {term(), port()}.
 -type error() :: term().
 -type command_list() :: [iodata()].
 -type response_list() :: [response()].
--type response() :: {ok, iodata()} | {error, error()}. 
+-type response() :: {ok, iodata()} | {error, error()}.
 
 -spec connect(inet:ip_address(), inet:port_number()) -> {ok , conn()} | {error, error()}.
 
@@ -31,7 +32,7 @@ request(Conn, Commands) ->
 -spec request(conn(), command_list(), non_neg_integer()) -> {ok, response_list(), conn()} | {error, error()}.
 
 request({State, Socket}, Commands, Timeout) ->
-  ok = gen_tcp:send(Socket, [[C, "\r\n"] || C <- Commands]),
+  ok = gen_tcp:send(Socket, [create_multibulk(Command) || Command <- Commands]),
   case recv(State, Socket, length(Commands), [], Timeout) of
     {ok, Results, NewState} -> {ok, Results, {NewState, Socket}};
     {error, _} = Error ->
@@ -59,3 +60,19 @@ handle_data(State, Socket, N, Results, Data, Timeout) ->
     {error, Error, Rest, NewState} -> handle_data(NewState, Socket, N - 1, [{error, Error} | Results], Rest, Timeout);
     {continue, NewState} -> recv(NewState, Socket, N, Results, Timeout)
   end.
+
+create_multibulk(Args) ->
+    ArgCount = [<<$*>>, integer_to_list(length(Args)), <<?NL>>],
+    ArgsBin = lists:map(fun to_bulk/1, lists:map(fun to_binary/1, Args)),
+
+    [ArgCount, ArgsBin].
+
+to_bulk(B) when is_binary(B) ->
+    [<<$$>>, integer_to_list(iolist_size(B)), <<?NL>>, B, <<?NL>>].
+
+to_binary(X) when is_list(X)    -> list_to_binary(X);
+to_binary(X) when is_atom(X)    -> list_to_binary(atom_to_list(X));
+to_binary(X) when is_binary(X)  -> X;
+to_binary(X) when is_integer(X) -> list_to_binary(integer_to_list(X));
+to_binary(X) when is_float(X)   -> throw({cannot_store_floats, X});
+to_binary(X)                    -> term_to_binary(X).
