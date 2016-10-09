@@ -1,3 +1,6 @@
+%% Many parts of this code are borrowed from wooga GmbH eredis
+%% library: https://github.com/wooga/eredis
+
 -module(eredis_sync).
 -export([connect/2, request/2, request/3, close/1]).
 -export_type([conn/0]).
@@ -62,13 +65,13 @@ handle_data(State, Socket, N, Results, Data, Timeout) ->
   end.
 
 create_multibulk(Args) ->
-    ArgCount = [<<$*>>, integer_to_list(length(Args)), <<?NL>>],
-    ArgsBin = lists:map(fun to_bulk/1, lists:map(fun to_binary/1, Args)),
+  ArgCount = [<<$*>>, integer_to_list(length(Args)), <<?NL>>],
+  ArgsBin = lists:map(fun to_bulk/1, lists:map(fun to_binary/1, Args)),
 
-    [ArgCount, ArgsBin].
+  [ArgCount, ArgsBin].
 
 to_bulk(B) when is_binary(B) ->
-    [<<$$>>, integer_to_list(iolist_size(B)), <<?NL>>, B, <<?NL>>].
+  [<<$$>>, integer_to_list(iolist_size(B)), <<?NL>>, B, <<?NL>>].
 
 to_binary(X) when is_list(X)    -> list_to_binary(X);
 to_binary(X) when is_atom(X)    -> list_to_binary(atom_to_list(X));
