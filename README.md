@@ -13,7 +13,18 @@ to interact with Redis through a simple `gen_tcp` socket, whithout some `gen_ser
 
 One needs to have local `redis-server` installed to run tests.
 
-## Sample usage
+## Usage
+
+With `rebar`, add actual version of the library to `rebar.config`, for example
+
+```erlang
+
+{eredis_sync, ".*",
+    {git, "https://github.com/funbox/eredis_sync.git", {ref, "v0.1.0"}}},
+
+```
+
+## Example
 
 ```erlang
 
@@ -26,7 +37,7 @@ Timeout = 1000,
   {ok, <<"1">>},
   {ok, <<"1">>},
   {ok, [<<"1">>, <<"2">>]}
-]} = eredis_sync:qp(Conn1, [
+] = eredis_sync:qp(Conn1, [
   ["DEL", "S"],
   ["SADD", "S", "1"],
   ["SADD", "S", "2"],
