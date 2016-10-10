@@ -2,7 +2,7 @@
 %% library: https://github.com/wooga/eredis
 
 -module(eredis_sync).
--export([connect/2, request/2, request/3, close/1]).
+-export([connect/2, connect/3, q/2, q/3, qp/2, qp/3, close/1]).
 -export_type([conn/0]).
 
 -define(DEFAULT_TIMEOUT, 5000).
@@ -10,9 +10,10 @@
 
 -opaque conn() :: {term(), port()}.
 -type error() :: term().
--type command_list() :: [iodata()].
--type response_list() :: [response()].
+-type command() :: iodata().
+-type command_list() :: [command()].
 -type response() :: {ok, iodata()} | {error, error()}.
+-type response_list() :: [response()].
 
 -spec connect(inet:ip_address(), inet:port_number()) -> {ok , conn()} | {error, error()}.
 
@@ -22,22 +23,50 @@ connect(Host, Port) ->
     {error, _} = Error -> Error
   end.
 
+-spec connect(inet:ip_address(), inet:port_number(), non_neg_integer()) -> {ok, conn()} | {error, error()}.
+
+connect(Host, Port, Db) ->
+  case connect(Host, Port) of
+    {ok, Conn} ->
+      case q(Conn, ["SELECT", Db]) of
+        {ok, _} ->
+           {ok, Conn};
+        {error, _} = Error ->
+          close(Conn),
+          Error
+      end;
+    Error -> Error
+  end.
+
 -spec close(conn()) -> ok.
 
 close({_, Socket}) ->
   ok = gen_tcp:close(Socket).
 
--spec request(conn(), command_list()) -> {ok, response_list(), conn()} | {error, error()}.
+-spec q(conn(), command()) -> {ok, response()} | {error, error()}.
 
-request(Conn, Commands) ->
-  request(Conn, Commands, ?DEFAULT_TIMEOUT).
+q(Conn, Command) ->
+  q(Conn, Command, ?DEFAULT_TIMEOUT).
 
--spec request(conn(), command_list(), non_neg_integer()) -> {ok, response_list(), conn()} | {error, error()}.
+-spec q(conn(), command_list(), non_neg_integer()) -> {ok, response()} | {error, error()}.
 
-request({State, Socket}, Commands, Timeout) ->
+q(Conn, Command, Timeout) ->
+  case qp(Conn, [Command], Timeout) of
+    {error, Error} -> {error, Error};
+    [Response] -> Response
+  end.
+
+-spec qp(conn(), command_list()) -> {ok, response()} | {error, error()}.
+
+qp(Conn, Commands) ->
+    qp(Conn, Commands, ?DEFAULT_TIMEOUT).
+
+-spec qp(conn(), command_list(), non_neg_integer()) -> {ok, response_list()} | {error, error()}.
+
+qp({State, Socket}, Commands, Timeout) ->
   ok = gen_tcp:send(Socket, [create_multibulk(Command) || Command <- Commands]),
   case recv(State, Socket, length(Commands), [], Timeout) of
-    {ok, Results, NewState} -> {ok, Results, {NewState, Socket}};
+    {ok, Results, _NewState} -> Results;
     {error, _} = Error ->
       gen_tcp:close(Socket),
       Error

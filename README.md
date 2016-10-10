@@ -18,25 +18,24 @@ One needs to have local `redis-server` installed to run tests.
 ```erlang
 
 {ok, Conn} = eredis_sync:connect({127,0,0,1}, 6379),
-{ok, [{ok, <<"PONG">>}], Conn1} = eredis_sync:request(Conn, [["PING"]]),
+{ok, <<"PONG">>} = eredis_sync:q(Conn, ["PING"]),
 
 Timeout = 1000,
-{ok, [
+[
   {ok, _},
   {ok, <<"1">>},
   {ok, <<"1">>},
   {ok, [<<"1">>, <<"2">>]}
-], Conn2} = eredis_sync:request(Conn1, [
+]} = eredis_sync:qp(Conn1, [
   ["DEL", "S"],
   ["SADD", "S", "1"],
   ["SADD", "S", "2"],
   ["SMEMBERS", "S"]
 ], Timeout),
 
-{ok, [{error, _}], Conn3} = eredis_sync:request(Conn2, [["PANG"]]),
+{error, _} = eredis_sync:q(Conn2, ["PANG"]),
 
 ok = eredis_sync:close(Conn3).
-
 ```
 
 ## License
