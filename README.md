@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/savonarola/eredis_sync.svg?branch=master)](https://travis-ci.org/savonarola/eredis_sync)
+[![Build Status](https://travis-ci.org/funbox/eredis_sync.svg?branch=master)](https://travis-ci.org/funbox/eredis_sync)
 
 `eredis_sync` is a simple Redis client which uses [eredis](https://github.com/wooga/eredis) parser
 to interact with Redis through a simple `gen_tcp` socket, whithout some `gen_server` wrapper or smth.
