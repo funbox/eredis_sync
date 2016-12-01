@@ -36,10 +36,10 @@ connect_nok(_Config) ->
   {error, _} = eredis_sync:connect({127,0,0,1}, 6380).
 
 connect_db_ok(_Config) ->
-  {ok, _} = eredis_sync:connect({127,0,0,1}, 6379, 0).
+  {ok, _} = eredis_sync:connect_db({127,0,0,1}, 6379, 0).
 
 connect_db_nok(_Config) ->
-  {error, _} = eredis_sync:connect({127,0,0,1}, 6379, 999999).
+  {error, _} = eredis_sync:connect_db({127,0,0,1}, 6379, 999999).
 
 connect() ->
   {ok, Conn} = eredis_sync:connect({127,0,0,1}, 6379),
