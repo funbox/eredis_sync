@@ -2,7 +2,7 @@
 %% library: https://github.com/wooga/eredis
 
 -module(eredis_sync).
--export([connect/2, connect/3, q/2, q/3, qp/2, qp/3, close/1]).
+-export([connect/2, connect/3, connect_db/3, connect_db/4, q/2, q/3, qp/2, qp/3, close/1]).
 -export_type([conn/0]).
 
 -define(DEFAULT_TIMEOUT, 5000).
@@ -18,15 +18,25 @@
 -spec connect(inet:ip_address(), inet:port_number()) -> {ok , conn()} | {error, error()}.
 
 connect(Host, Port) ->
-  case gen_tcp:connect(Host, Port, [binary, {packet, raw}, {active, false}]) of
+  connect(Host, Port, ?DEFAULT_TIMEOUT).
+
+-spec connect(inet:ip_address(), inet:port_number(), timeout()) -> {ok , conn()} | {error, error()}.
+
+connect(Host, Port, Timeout) ->
+  case gen_tcp:connect(Host, Port, [binary, {packet, raw}, {active, false}], Timeout) of
     {ok, Socket} -> {ok, {eredis_parser:init(), Socket}};
     {error, _} = Error -> Error
   end.
 
--spec connect(inet:ip_address(), inet:port_number(), non_neg_integer()) -> {ok, conn()} | {error, error()}.
+-spec connect_db(inet:ip_address(), inet:port_number(), non_neg_integer()) -> {ok, conn()} | {error, error()}.
 
-connect(Host, Port, Db) ->
-  case connect(Host, Port) of
+connect_db(Host, Port, Db) ->
+  connect_db(Host, Port, Db, ?DEFAULT_TIMEOUT).
+
+-spec connect_db(inet:ip_address(), inet:port_number(), non_neg_integer(), timeout()) -> {ok, conn()} | {error, error()}.
+
+connect_db(Host, Port, Db, Timeout) ->
+  case connect(Host, Port, Timeout) of
     {ok, Conn} ->
       case q(Conn, ["SELECT", Db]) of
         {ok, _} ->
