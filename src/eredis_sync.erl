@@ -24,7 +24,7 @@ connect(Host, Port) ->
 
 connect(Host, Port, Timeout) ->
   case gen_tcp:connect(Host, Port, [binary, {packet, raw}, {active, false}], Timeout) of
-    {ok, Socket} -> {ok, {eredis_parser:init(), Socket}};
+    {ok, Socket} -> {ok, {eredis_sync_parser:init(), Socket}};
     {error, _} = Error -> Error
   end.
 
@@ -95,7 +95,7 @@ recv(State, Socket, N, Results, Timeout) ->
   end.
 
 handle_data(State, Socket, N, Results, Data, Timeout) ->
-  case eredis_parser:parse(State, Data) of
+  case eredis_sync_parser:parse(State, Data) of
     {ok, Result, NewState} -> recv(NewState, Socket, N - 1, [{ok, Result} | Results], Timeout);
     {ok, Result, Rest, NewState} -> handle_data(NewState, Socket, N - 1, [{ok, Result} | Results], Rest, Timeout);
     {error, Error, NewState} -> recv(NewState, Socket, N - 1, [{error, Error} | Results], Timeout);
