@@ -15,12 +15,15 @@
 -type response() :: {ok, iodata()} | {error, error()}.
 -type response_list() :: [response()].
 
--spec connect(inet:ip_address(), inet:port_number()) -> {ok , conn()} | {error, error()}.
+-spec connect(inet:socket_address() | inet:hostname() | binary(), inet:port_number()) -> {ok , eredis_sync:conn()} | {error, error()}.
 
 connect(Host, Port) ->
   connect(Host, Port, ?DEFAULT_TIMEOUT).
 
--spec connect(inet:ip_address(), inet:port_number(), timeout()) -> {ok , conn()} | {error, error()}.
+-spec connect(inet:socket_address() | inet:hostname() | binary(), inet:port_number(), timeout()) -> {ok , eredis_sync:conn()} | {error, error()}.
+
+connect(Host, Port, Timeout) when is_binary(Host) ->
+  connect(binary_to_list(Host), Port, Timeout);
 
 connect(Host, Port, Timeout) ->
   case gen_tcp:connect(Host, Port, [binary, {packet, raw}, {active, false}], Timeout) of
@@ -28,19 +31,19 @@ connect(Host, Port, Timeout) ->
     {error, _} = Error -> Error
   end.
 
--spec connect_db(inet:ip_address(), inet:port_number(), non_neg_integer()) -> {ok, conn()} | {error, error()}.
+-spec connect_db(inet:socket_address() | inet:hostname() | binary(), inet:port_number(), non_neg_integer()) -> {ok, eredis_sync:conn()} | {error, error()}.
 
 connect_db(Host, Port, Db) ->
   connect_db(Host, Port, Db, ?DEFAULT_TIMEOUT).
 
--spec connect_db(inet:ip_address(), inet:port_number(), non_neg_integer(), timeout()) -> {ok, conn()} | {error, error()}.
+-spec connect_db(inet:socket_address() | inet:hostname() | binary(), inet:port_number(), non_neg_integer(), timeout()) -> {ok, eredis_sync:conn()} | {error, error()}.
 
 connect_db(Host, Port, Db, Timeout) ->
   case connect(Host, Port, Timeout) of
     {ok, Conn} ->
       case q(Conn, ["SELECT", Db]) of
         {ok, _} ->
-           {ok, Conn};
+          {ok, Conn};
         {error, _} = Error ->
           close(Conn),
           Error
