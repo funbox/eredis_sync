@@ -42,4 +42,4 @@ add_to_plt: build_plt
 	mv eredis_sync.plt.new eredis_sync.plt
 
 dialyzer:
-	dialyzer --src src --plts erlang.plt eredis_sync.plt -Wunmatched_returns -Werror_handling -Wrace_conditions -Wunderspecs
+	dialyzer --src src --plts erlang.plt eredis_sync.plt -Wunmatched_returns -Werror_handling -Wrace_conditions
