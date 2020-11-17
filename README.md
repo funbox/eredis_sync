@@ -26,7 +26,16 @@ With `rebar`, add actual version of the library to `rebar.config`, for example:
 
 ```erlang
 {eredis_sync, ".*",
-    {git, "https://github.com/funbox/eredis_sync.git", {ref, "v0.1.0"}}},
+    {git, "https://github.com/funbox/eredis_sync.git", {ref, "v0.1.4"}}},
+```
+
+or add it as a Hex dependency:
+
+```erlang
+{deps,[
+  eredis_sync
+  %% {eredis_sync,"0.1.4"}
+]}.
 ```
 
 ## Example
