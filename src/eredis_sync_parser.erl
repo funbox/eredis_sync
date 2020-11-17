@@ -41,13 +41,14 @@
 init() ->
     #pstate{}.
 
--type return_value() :: undefined | binary() | [binary() | nonempty_list()].
+-type return_value() :: undefined | binary().
 -spec parse(State::#pstate{}, Data::binary()) ->
                    {ok, return_value(), NewState::#pstate{}} |
                        {ok, return_value(), Rest::binary(), NewState::#pstate{}} |
                        {error, ErrString::binary(), NewState::#pstate{}} |
                        {error, ErrString::binary(), Rest::binary(), NewState::#pstate{}} |
-                       {continue, NewState::#pstate{}}.
+                       {continue, NewState::#pstate{}} |
+                       {error, unknown_response}.
 
 %% @doc: Parses the (possibly partial) response from Redis. Returns
 %% either {ok, Value, NewState}, {ok, Value, Rest, NewState} or
@@ -281,8 +282,7 @@ buffer_append({List, Size}, Binary) ->
   end,
   {NewList, Size + byte_size(Binary)}.
 
-buffer_hd({[<<Char, _/binary>> | _], _}) -> [Char];
-buffer_hd({[], _}) -> [].
+buffer_hd({[<<Char, _/binary>> | _], _}) -> [Char].
 
 buffer_tl({[<<_, RestBin/binary>> | Rest], Size}) -> {[RestBin | Rest], Size - 1}.
 

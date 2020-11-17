@@ -33,16 +33,16 @@ connect(Host, Port, Timeout) ->
 
 -spec connect_db(inet:socket_address() | inet:hostname() | binary(), inet:port_number(), non_neg_integer()) -> {ok, eredis_sync:conn()} | {error, error()}.
 
-connect_db(Host, Port, Db) ->
+connect_db(Host, Port, Db) when is_integer(Db) and (Db >= 0) ->
   connect_db(Host, Port, Db, ?DEFAULT_TIMEOUT).
 
 -spec connect_db(inet:socket_address() | inet:hostname() | binary(), inet:port_number(), non_neg_integer(), timeout()) -> {ok, eredis_sync:conn()} | {error, error()}.
 
-connect_db(Host, Port, Db, Timeout) ->
+connect_db(Host, Port, Db, Timeout) when is_integer(Db) and (Db >= 0) ->
   case connect(Host, Port, Timeout) of
     {ok, Conn} ->
-      case q(Conn, ["SELECT", Db]) of
-        {ok, _} ->
+      case q(Conn, ["SELECT", integer_to_list(Db)]) of
+        {ok , _} ->
           {ok, Conn};
         {error, _} = Error ->
           close(Conn),
@@ -56,12 +56,12 @@ connect_db(Host, Port, Db, Timeout) ->
 close({_, Socket}) ->
   ok = gen_tcp:close(Socket).
 
--spec q(conn(), command()) -> {ok, response()} | {error, error()}.
+-spec q(conn(), command()) -> response().
 
 q(Conn, Command) ->
   q(Conn, Command, ?DEFAULT_TIMEOUT).
 
--spec q(conn(), command_list(), non_neg_integer()) -> {ok, response()} | {error, error()}.
+-spec q(conn(), command_list(), non_neg_integer()) -> response().
 
 q(Conn, Command, Timeout) ->
   case qp(Conn, [Command], Timeout) of
@@ -69,12 +69,12 @@ q(Conn, Command, Timeout) ->
     [Response] -> Response
   end.
 
--spec qp(conn(), command_list()) -> {ok, response()} | {error, error()}.
+-spec qp(conn(), command_list()) -> response_list() | {error, error()}.
 
 qp(Conn, Commands) ->
     qp(Conn, Commands, ?DEFAULT_TIMEOUT).
 
--spec qp(conn(), command_list(), non_neg_integer()) -> {ok, response_list()} | {error, error()}.
+-spec qp(conn(), command_list(), non_neg_integer()) -> response_list() | {error, error()}.
 
 qp({State, Socket}, Commands, Timeout) ->
   ok = gen_tcp:send(Socket, [create_multibulk(Command) || Command <- Commands]),
@@ -103,21 +103,15 @@ handle_data(State, Socket, N, Results, Data, Timeout) ->
     {ok, Result, Rest, NewState} -> handle_data(NewState, Socket, N - 1, [{ok, Result} | Results], Rest, Timeout);
     {error, Error, NewState} -> recv(NewState, Socket, N - 1, [{error, Error} | Results], Timeout);
     {error, Error, Rest, NewState} -> handle_data(NewState, Socket, N - 1, [{error, Error} | Results], Rest, Timeout);
-    {continue, NewState} -> recv(NewState, Socket, N, Results, Timeout)
+    {continue, NewState} -> recv(NewState, Socket, N, Results, Timeout);
+    {error, _} = Error -> Error
   end.
 
 create_multibulk(Args) ->
   ArgCount = [<<$*>>, integer_to_list(length(Args)), <<?NL>>],
-  ArgsBin = lists:map(fun to_bulk/1, lists:map(fun to_binary/1, Args)),
+  ArgsBin = lists:map(fun to_bulk/1, Args),
 
   [ArgCount, ArgsBin].
 
-to_bulk(B) when is_binary(B) ->
+to_bulk(B) ->
   [<<$$>>, integer_to_list(iolist_size(B)), <<?NL>>, B, <<?NL>>].
-
-to_binary(X) when is_list(X)    -> list_to_binary(X);
-to_binary(X) when is_atom(X)    -> list_to_binary(atom_to_list(X));
-to_binary(X) when is_binary(X)  -> X;
-to_binary(X) when is_integer(X) -> list_to_binary(integer_to_list(X));
-to_binary(X) when is_float(X)   -> throw({cannot_store_floats, X});
-to_binary(X)                    -> term_to_binary(X).
