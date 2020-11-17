@@ -1,4 +1,4 @@
-.PHONY: all compile run test clean dialyzer
+.PHONY: all compile run test gh-test clean dialyzer
 .PHONY: build_plt dialyzer
 
 DIALYZER_APPS= asn1 compiler crypto erts inets kernel public_key sasl ssl stdlib syntax_tools tools
