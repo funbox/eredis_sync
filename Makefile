@@ -15,7 +15,10 @@ run:
 	erl -pa _build/default/lib/*/ebin
 
 test:
-	$(REBAR) ct skip_deps=true verbose=3
+	$(REBAR) ct --config test/localhost.config --verbosity 3
+
+gh-test:
+	$(REBAR) ct --config test/github.config --verbosity 3
 
 clean:
 	$(REBAR) clean

@@ -29,24 +29,30 @@ all() -> [
   request_timeout
 ].
 
+redis_hosts() ->
+  ct:get_config(redis_hosts).
+
+redis_host() ->
+  ct:get_config(redis_host).
+
 connect_ok(_Config) ->
-  {ok, _} = eredis_sync:connect({127,0,0,1}, 6379),
-  {ok, _} = eredis_sync:connect("127.0.0.1", 6379),
-  {ok, _} = eredis_sync:connect(<<"127.0.0.1">>, 6379).
+  lists:foreach(fun(Host) ->
+    {ok, _} = eredis_sync:connect(Host, 6379)
+  end, redis_hosts()).
 
 connect_nok(_Config) ->
-  {error, _} = eredis_sync:connect({127,0,0,1}, 6380).
+  {error, _} = eredis_sync:connect(redis_host(), 6380).
 
 connect_db_ok(_Config) ->
-  {ok, _} = eredis_sync:connect_db({127,0,0,1}, 6379, 0),
-  {ok, _} = eredis_sync:connect_db("127.0.0.1", 6379, 0),
-  {ok, _} = eredis_sync:connect_db(<<"127.0.0.1">>, 6379, 0).
+  lists:foreach(fun(Host) ->
+    {ok, _} = eredis_sync:connect_db(Host, 6379, 0)
+  end, redis_hosts()).
 
 connect_db_nok(_Config) ->
-  {error, _} = eredis_sync:connect_db({127,0,0,1}, 6379, 999999).
+  {error, _} = eredis_sync:connect_db(redis_host(), 6379, 999999).
 
 connect() ->
-  {ok, Conn} = eredis_sync:connect({127,0,0,1}, 6379),
+  {ok, Conn} = eredis_sync:connect(redis_host(), 6379),
   Conn.
 
 close(_Config) ->

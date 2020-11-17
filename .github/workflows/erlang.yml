@@ -1,0 +1,43 @@
+name: Erlang CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version:
+        - 23
+    
+    services:
+      redis:
+        image: redis
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    container:
+      # image: erlang:${{ matrix.version }}
+      image: redis
+    steps:
+      - name: wait 10
+        run: sleep 10
+      - name: Check redis
+        run: redis-cli -h redis ping
+#     steps:
+#     - name: Compile
+#       run: make compile
+#     - uses: actions/checkout@v2
+#     - name: Compile
+#       run: make compile
+#     - name: Run tests
+#       run: make test
