@@ -1,6 +1,6 @@
 # eredis_sync
 
-[![Build Status](https://travis-ci.org/funbox/eredis_sync.svg?branch=master)](https://travis-ci.org/funbox/eredis_sync)
+![Erlang CI](https://github.com/funbox/eredis_sync/workflows/Erlang%20CI/badge.svg)
 
 A simple Redis client which uses an optimized version of
 [eredis](https://github.com/wooga/eredis) parser to interact with Redis through
