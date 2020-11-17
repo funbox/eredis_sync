@@ -12,14 +12,13 @@ jobs:
 
     runs-on: ubuntu-latest
     strategy:
-          matrix:
-            include:
-              version:
-              - 19
-              - 20
-              - 21
-              - 22
-              - 23
+      matrix:
+        version:
+        - 19
+        - 20
+        - 21
+        - 22
+        - 23
 
     container:
       image: erlang:${{ matrix.version }}
